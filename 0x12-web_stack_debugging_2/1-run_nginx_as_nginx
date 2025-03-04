@@ -26,3 +26,4 @@ sudo systemctl enable nginx
 
 # Restart the nginx service as the nginx user
 sudo -u nginx service nginx restart
+111
