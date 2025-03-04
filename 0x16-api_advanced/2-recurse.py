@@ -1,32 +1,39 @@
 #!/usr/bin/python3
-"""recursive function that queries the Reddit API and returns
- a list containing the titles of all hot articles for a given subreddit. """
+"""Queries the Reddit API and returns a list containing
+    the titles of all hot articles for a given subreddit."""
 
 import requests
 
 
 def recurse(subreddit, hot_list=[], after="", count=0):
-    """Returns a list of titles of all hot posts on a given subreddit."""
-    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
-    headers = {
-        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
-    }
-    params = {
-        "after": after,
-        "count": count,
-        "limit": 100
-    }
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
-    if response.status_code == 404:
+    """Returns a list containing the titles of
+    all hot articles for a given subreddit.
+    If not a valid subreddit, return None.
+    """
+    if subreddit is None or not subreddit or not isinstance(subreddit, str):
         return None
 
-    results = response.json().get("data")
-    after = results.get("after")
-    count += results.get("dist")
-    for c in results.get("children"):
-        hot_list.append(c.get("data").get("title"))
+    url = 'https://www.reddit.com/r/{}/hot.json'.format(subreddit)
+    user_agent = {'User-Agent': 'Google Chrome Version 125.0.6422.142'}
+    query_params = {'after': after, 'count': count}
+    try:
+        response = requests.get(url, headers=user_agent,
+                                params=query_params, allow_redirects=False)
 
-    if after is not None:
-        return recurse(subreddit, hot_list, after, count)
-    return hot_list
+        if response.status_code != 200:
+            return None
+
+        data = response.json().get('data')
+        after = data.get('after')
+        count += data.get('dist')
+        children = data.get('children')
+
+        for child in children:
+            hot_list.append(child.get('data').get('title'))
+
+        if after is not None:
+            return recurse(subreddit, hot_list, after, count)
+        return hot_list
+
+    except Exception:
+        return None
